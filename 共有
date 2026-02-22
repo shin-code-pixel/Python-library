@@ -1,10 +1,6 @@
-python : Traceback (most recent call last):
-発生場所 行:1 文字:1
-+ python ./compare.py 2> error.txt
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 
+PS C:\work\csv-compare> & C:/work/csv-compare/.venv/Scripts/Activate.ps1
+(.venv) PS C:\work\csv-compare> python ./compare.py
+Traceback (most recent call last):
   File "C:\work\csv-compare\compare.py", line 17, in <module>
     merged = df1.merge(df2, on="id", how="outer", indicator=True)
   File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\frame.py", line 12884, in merge
@@ -19,14 +15,13 @@ python : Traceback (most recent call last):
     ...<10 lines>...
         validate=validate,
     )
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 1018, in __init__
+  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 1018, in __init__       
     ) = self._get_merge_keys()
         ~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 1620, in _get_merge_key
-s
+  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 1620, in _get_merge_keys
     right_keys.append(right._get_label_or_level_values(rk))
                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\generic.py", line 1776, in _get_label_or_level_
-values
+  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\generic.py", line 1776, in _get_label_or_level_values
     raise KeyError(key)
 KeyError: 'id'
+(.venv) PS C:\work\csv-compare>  
