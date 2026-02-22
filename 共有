@@ -1,27 +1,32 @@
 PS C:\work\csv-compare> & C:/work/csv-compare/.venv/Scripts/Activate.ps1
-(.venv) PS C:\work\csv-compare> python ./compare.py
-Traceback (most recent call last):
-  File "C:\work\csv-compare\compare.py", line 17, in <module>
-    merged = df1.merge(df2, on="id", how="outer", indicator=True)
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\frame.py", line 12884, in merge
-    return merge(
-        self,
-    ...<10 lines>...
-        validate=validate,
-    )
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 385, in merge
-    op = _MergeOperation(
-        left_df,
-    ...<10 lines>...
-        validate=validate,
-    )
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 1018, in __init__       
-    ) = self._get_merge_keys()
-        ~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\reshape\merge.py", line 1620, in _get_merge_keys
-    right_keys.append(right._get_label_or_level_values(rk))
-                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^
-  File "C:\work\csv-compare\.venv\Lib\site-packages\pandas\core\generic.py", line 1776, in _get_label_or_level_values
-    raise KeyError(key)
-KeyError: 'id'
-(.venv) PS C:\work\csv-compare>  
+(.venv) PS C:\work\csv-compare> Get-Content ./compare.py
+import pandas as pd
+
+file1 = "a.csv"
+file2 = "b.csv"
+
+df1 = pd.read_csv(file1)
+df2 = pd.read_csv(file2)
+
+#蛻怜錐繧呈ｭ｣隕丞喧・育ｩｺ逋ｽ髯､蜴ｻ・句ｰ乗枚蟄暦ｼ・
+df1.columns = df1.columns.astype(str).str.strip().str.lower()
+df2.columns = df2.columns.astype(str).str.strip().str.lower()
+
+print("df1 columns:", list(df1.columns))
+print("df2 columns:", list(df1.columns))
+
+# 荳｡譁ｹ縺ｫ蜈ｱ騾壹☆繧句・繧偵く繝ｼ縺ｫ縺吶ｋ・医∪縺壹・荳逡ｪ蟾ｦ縺ｮ蜈ｱ騾壼・・・
+common = [c for c in df1.columns if c in df2.columns]
+if not common:
+    raise RuntimeError("蜈ｱ騾壹・蛻怜錐縺後≠繧翫∪縺帙ｓ縲・SV繝倥ャ繝繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・)
+
+# 竊舌譛蛻昴・蛻励ｒ閾ｪ蜍輔〒繧ｭ繝ｼ縺ｫ縺吶ｋ
+key = common[0]
+print("merge key:", key)
+
+#ID繧偵く繝ｼ縺ｫ縺吶ｋ
+merged = df1.merge(df2, on=key, how="outer", indicator=True)
+diff = merged[merged["_merge"] != "both"]
+
+print(diff)
+(.venv) PS C:\work\csv-compare> 
