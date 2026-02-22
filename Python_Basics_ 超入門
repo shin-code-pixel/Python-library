@@ -1,4 +1,4 @@
-# Python初心者まとめ（超入門）
+# Python初心者まとめ
 
 このページは「Pythonを触り始めた人が、用語と最低限の考え方で迷子にならない」ためのメモです。
 （Windows+ VS code想定）
@@ -12,7 +12,7 @@ Excelで言うと「VBAのマクロ」を、Excelの外でも動く形にした�
 
 ---
 
-## 1. まず覚える用語（最重要だけ）
+## 1. まず覚える用語
 
 ### Python本体 / インタープリタ（interpreter）
 '.py' の命令を実行するエンジン。
@@ -33,4 +33,152 @@ Pythonファイル（だいたい xxx.py）１個の単位。import して使う
 
 ### ライブラリ（library）
 便利機能の集合（pandasなど）。基本は「あとから入れる」。
+
+### import
+ライブラリを読み込む命令。
+  import math
+  import pandas as pd
+
+### pip
+ライブラリをインストールする仕組み。
+　pip install pandas
+
+### requirements.txt
+必要ライブラリの一覧（環境再現に使う）。
+　pip freeze > requirements.txt
+　pip install -r requirements.txt
+
+---
+
+## 2. 仮想環境（.venv)とは？
+.venv(仮想環境）
+
+そのプロジェクト専用のPython環境です。
+目的：プロジェクトごとにライブラリを分離して、混ざって壊れるのを防ぐ。
+作成：python -m venv .venv
+有効化(PowerShell）：./.venv/Scripts/Activate.ps1
+無効か：deactivate
+目印：有効化するとプロンプトに（.venv）が出る。
+
+---
+
+## 3. VS Codeで"ラクにする"最低設定
+インタープリタ選択（重要）
+VS Codeが .venv を使うように設定すると、毎回activateしなくてよくなることが多い。
+・Python：　Select Interpreter
+・.venv/Scripts/python.exe を選ぶ
+
+---
+
+## 4. 最低限の文法
+
+### 変数
+name = "AAA"
+n = 10
+
+### 型（ざっくり）
+・str 文字列
+・int 整数
+・float 小数
+・bool True/False
+・list 配列
+・dict キーと値
+
+s = "text"
+i = 123
+lst = [1,2,3]
+d = {"id": 1, "name": "AAA"}
+
+### if（条件）
+if n > 0
+    print("plus")
+else:
+    print("minus or zero")
+
+
+### for（繰り返し）
+for x in [1,2,3]:
+    print(x)
+
+
+### 関数（処理のかたまり）
+def add(a, b):
+    return a + b
+
+---
+
+## 5. エラーの読み方
+Pythonは失敗するとTracebackが出ます。見る場所は３つだけ。
+１.一番下の行：エラー種類（例：KeyError,ModuleNotFoundError）
+２.File...line N：どのファイルの何行目か
+３.その周辺：実際に失敗したコード行
+
+よくあるもの：
+・ModuleNotFoundError：ライブラリが入ってない（pip installする / venvが違う）
+・KeyError：辞表や表（DataFrame）にそのキー/列がない
+・FileNotFoundError：ファイルパスが違う（作業フォルダが違う）
+
+---
+
+## 6. ファイル/フォルダ（実務で必須）
+カレントディレクトリ（作業場所）
+「いまどこで実行してるか」。ここがズレるとCSVが見つからない。
+pwd
+dir
+
+---
+
+## 7. "まず作ると伸びる"最小テンプレ
+project/
+  .venv/
+  main.py
+  requirements.txt
+  README.md
+
+---
+
+## 8. よくあるつまずき（Windows）
+（１）Activate.ps1が実行できない
+PowerShellの制限。ユーザ単位で許可する例：
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+（２）venvを有効にしたのにpip先が違う
+which/where で確認。
+
+where python
+where pip
+
+.venv配下が出ていればOK。
+
+---
+
+## 9. 目標の考え方（おすすめ）
+初心者はまずこれで十分です。
+・「Python本体」：実行できる
+・「.venv」：プロジェクト専用環境を作れる
+・「pip」：ライブラリを入れられる
+・「エラー」：一番下を見る癖をつける
+・「ファイル場所」：pwd/dirで迷子を防ぐ
+
+---
+
+## 10. 次に読むなら（キーワード）
+・venv / pip / requirements.txt
+・pathlib（ファイル操作）
+・argparse（コマンド引数）
+・logging（ログ）
+・pandas（CSV/表処理）
+
+
+
+
+
+
+
+
+
+
+
+
+
 
