@@ -1,9 +1,0 @@
-PS C:\work\csv-compare> & C:/work/csv-compare/.venv/Scripts/Activate.ps1
-(.venv) PS C:\work\csv-compare> python ./compare.py
-df1 columns: ['id', 'name']
-df2 columns: ['id', 'name']
-merge key: id
-Empty DataFrame
-Columns: [id, name_x, name_y, _merge]
-Index: []
-(.venv) PS C:\work\csv-compare> 
