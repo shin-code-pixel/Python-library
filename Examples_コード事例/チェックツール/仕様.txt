@@ -6,6 +6,7 @@
 4. ルールに従って１行ずつチェックして、エラーをリストに貯める
 5. エラー一覧を errors.csv として出力する
 
+---------------------------------------------------------------------------------------------------------------------------
 VBAで言うと：
 ・input.csv を開いて配列に読み込み
 ・チェック仕様は別シート（ルール表）に書いておいて
@@ -14,6 +15,8 @@ VBAで言うと：
 
 これを Excelを開かずに、CSVとテキストだけでやっています。
 
+---------------------------------------------------------------------------------------------------------------------------
+
 Python / Pandas の基本対応表（VBA脳向け）
 ・DataFrame（pandasの表）＝Excelの「範囲」＋「見出し行」をセットで持った感じ
 ・pd.read_csv（...)　＝　CSVを読み込み（VBAのFileOpen → Split → 配列化みたいな部分）
@@ -21,13 +24,17 @@ Python / Pandas の基本対応表（VBA脳向け）
 ・list.append(...) = VBA で Collection.Add / ArrayList.Add
 ・最後に to_csv（...） = エラー一覧シートをCSVに書き出し
 
+---------------------------------------------------------------------------------------------------------------------------
 
 checker.py を上から分解して説明
+
 1)import
 import pandas as pd
 ・pandas を使う宣言です。
 ・pd は略称（慣習）で、以後 pd.read_csv()みたいに書けます。
 VBAでいう Option Explicit とは違って、「ライブラリを読み込む」行です。
+
+-----------------------------------------------------------------------------------
 
 2)設定（ファイル名）
 INPUT_CSV = "input.csv"
@@ -40,6 +47,233 @@ RULES_DIGITS = "rules_digits.csv"
 VBAで言えば、
 Const INPUT_CSV As String = "input.csv"
 みたいな立ち位置です。
+
+-----------------------------------------------------------------------------------
+
+3)add_error 関数（エラーを１件追加する部品）
+
+def add_error(errors, row_idx, column, message, value):
+    errors.append({
+        "row": row_idx + 2,
+        "column": column,
+        "message": message,
+        "value": "" if pd.isna(value) else str(value)
+    })
+
+何のため？
+エラーを追加する処理が何回も出てくるので、まとめています。
+VBAなら Sub AddError(...)を作るのと同じです。
+
+引数の意味
+・errors:エラー一覧を入れている「箱」（list)
+・row_idx:0始まりの行番号（Pythonの列挙は0は基本）
+・column:エラー対象の列名
+・message:エラー理由（例：必須、数字のみ等）
+・value:実際に入っていた値
+
+row_idx + 2 の意味
+
+CSVは通常、
+・1行目:ヘッダ（列名）
+・2行目:データ1行目
+
+Python の row_idx は 0 始まり（0 = データ１行目）なので、
+・CSV上の行番号に合わせるため +2 しています。
+
+VBAでも「ヘッダ分+1」みたいな補正、やりますよね。あれです。
+
+pd.isna(value)
+
+value が NaN（欠損扱い）かどうか判定します。
+CSVでも空っぽや欠損は状況で NaN っぽく扱われることがあるので、ここで整えています。
+
+-----------------------------------------------------------------------------------
+
+4)main 関数（本体）
+
+def main():
+    df = pd.read_csv(INPUT_CSV, dtype=str)
+    df.columns = df.columns.astype(str).str.strip().str.lower()
+
+pd.read_csv(..., dtype=str)が超重要
+
+ここがVBAと大きく違うポイントです。
+
+・Python/pandasは「勝手に型を推測」します。
+・例えば 0012 が数値と判断されると 12 になってしまう（先頭ゼロが落ちる）
+
+帳票・コード系の世界では致命傷なので、最初から全部文字列として読むのが安全です。
+VBAでいう CStr を強制して読むイメージです。
+
+列名正規化（strip + lower）
+
+CSVのヘッダは、空白混入や ID/id 混在が起きやすいです。
+それを全部統一します。
+
+・strip():前後空白を削除
+・lower():小文字化
+
+VBAで言えば「ヘッダ文字列をTrimしてLCaseする」処理です。
+
+-----------------------------------------------------------------------------------
+
+5)エラー箱を用意
+errors = []
+
+これは「エラー一覧」の入れ物です（list）。
+VBAならDim errors As New Collection的な役割です。
+
+この箱に「辞書（dict）」をどんどん追加していきます。
+
+-----------------------------------------------------------------------------------
+
+必須チェック部
+
+6)ルール読み込み
+
+req = pd.read_csv(RULES_REQUIRED, dtype=str)
+req_cols = [c.strip().lower() for c in req["column"].tolist()]
+
+rules_required.csv の中身
+
+column
+id
+name
+
+・ルールは「列名一覧」だけ
+・その列が空ならエラー
+
+req["column"]
+
+req は表なので、 "column" 列を取り出しています。
+VBAで言う「ルール表のA列」みたいなものです。
+
+tolist()
+
+pandasの列を、普通のPythonリストに変換。
+
+-----------------------------------------------------------------------------------
+
+7)必須チェック実行
+
+for col in req_cols:
+    if col not in df.columns:
+        errors.append({"row": "", "column": col, "message": "必須列が存在しません", "value": ""})
+        continue
+
+    for i, v in enumerate(df[col].tolist()):
+        if v is None or str(v).strip() == "" or str(v).strip().lower() == "nan":
+            add_error(errors, i, col, "必須（空欄）", v)
+
+まず「列が存在するか」
+入力CSVにその列が無ければ、行番号の概念がないので row="" でエラーを１件入れます。
+VBAでも「列がない=テンプレ違い」みたいな異常扱いしますよね。
+
+enumerate(...)
+
+(i, v)で、
+・i:0始まりの行番号
+・v:そのセルの値
+
+VBAなら:
+
+For i = 1 To lastRow
+    v = Cells(i, col)
+Next
+
+に相当します。
+
+空判定が少し多い理由
+
+CSVは「空欄」が
+・空文字
+・NaN
+・Noneっぽく見えるなど揺れることがあるので、雑に広めに拾っています。
+
+-----------------------------------------------------------------------------------
+
+数字・桁数チェック部
+
+8)ルール読み込み
+
+dig = pd.read_csv(RULES_DIGITS, dtype=str)
+for _, r in dig.iterrows():
+    col = str(r["column"]).strip().lower()
+    min_len = int(r["min_len"])
+    max_len = int(r["max_len"])
+
+rules_digits.csv の例：
+
+column,min_len,max_len
+id,1,10
+
+・id は数字のみ
+・桁数は 1 ～ 10
+
+iterrows()
+ルール表を１行ずつ読む方法です。
+VBAの「ルール表を上から読んで処理する」感じ。
+
+int(...)
+
+桁数比較するので数値化します。
+
+-----------------------------------------------------------------------------------
+
+9)数字・桁数チェック実行
+
+If col not in df.columns:
+    errors.append({"row": "", "column": col, "message": "桁数チェック列が存在しません", "value": ""})
+    continue
+
+for i, v in enumerate(df[col].tolist()):
+    s = "" if v is None else str(v).strip()
+    If s == "" or s.lower() == "nan":
+        continue # 空は必須側でやる想定
+    If not s.isdigit():
+        add_error(errors, i, col, "数字のみではありません", v)
+        continue
+    If not(min_len <= len(s) <= max_len):
+        add_error(errors, i, col, f"桁数範囲外（{min_len}~{max_len}) ", v)
+
+空はスキップしている理由
+
+「空は必須チェックで出す」方針なので、ここでは空は見ません。
+同じセルで「必須」「数字のみ」の二重エラーを出したくないからです。
+
+s.isdigit()
+
+文字列が全部数字か判定します。
+VBAでいうLike "*[!0-9]*" の逆みたいなことです。
+
+len(s)
+
+桁数です。VBAの Len(s)。
+
+-----------------------------------------------------------------------------------
+
+エラー出力部
+
+10)DataFrame化
+
+out = pd.DataFrame(errors, columns=["row", "column", "message", "value"])
+
+ここは「エラー箱（list of dict）を表にする」行です。
+
+VBAで言うなら「エラー一覧シートの列を決めて書き出す」準備。
+
+-----------------------------------------------------------------------------------
+
+11)CSV保存
+
+out.to_csv(OUT_ERRORS, index=False, encoding="utf-8-sig")
+
+・index = False : 行番号（0,1,2....）みたいな余計な列を出さない
+・encoding = "utf-8-sig" : Excelで開いたとき文字化けしにくい
+
+-----------------------------------------------------------------------------------
+
+
 
 
 
